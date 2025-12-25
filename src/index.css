@@ -1,0 +1,91 @@
+@import "tailwindcss";
+
+
+
+
+
+@theme {
+  --color-frosted-mint-50: #ebf9ee;
+  --color-frosted-mint-100: #d8f3dc;
+  --color-frosted-mint-200: #b1e7b9;
+  --color-frosted-mint-300: #8adb96;
+  --color-frosted-mint-400: #63cf73;
+  --color-frosted-mint-500: #3cc350;
+  --color-frosted-mint-600: #309c40;
+  --color-frosted-mint-700: #247530;
+  --color-frosted-mint-800: #184e20;
+  --color-frosted-mint-900: #0c2710;
+  --color-frosted-mint-950: #081b0b;
+
+  --color-celadon-50: #edf8f2;
+  --color-celadon-100: #dbf0e4;
+  --color-celadon-200: #b6e2ca;
+  --color-celadon-300: #92d3af;
+  --color-celadon-400: #6dc595;
+  --color-celadon-500: #49b67a;
+  --color-celadon-600: #3a9262;
+  --color-celadon-700: #2c6d49;
+  --color-celadon-800: #1d4931;
+  --color-celadon-900: #0f2418;
+  --color-celadon-950: #0a1a11;
+
+  --color-mint-leaf-50: #edf7f3;
+  --color-mint-leaf-100: #dbf0e6;
+  --color-mint-leaf-200: #b7e1cd;
+  --color-mint-leaf-300: #93d2b5;
+  --color-mint-leaf-400: #6fc39c;
+  --color-mint-leaf-500: #4bb483;
+  --color-mint-leaf-600: #3c9069;
+  --color-mint-leaf-700: #2d6c4f;
+  --color-mint-leaf-800: #1e4834;
+  --color-mint-leaf-900: #0f241a;
+  --color-mint-leaf-950: #0b1912;
+
+  --color-sea-green-50: #edf7f3;
+  --color-sea-green-100: #dcefe6;
+  --color-sea-green-200: #b8e0ce;
+  --color-sea-green-300: #95d0b5;
+  --color-sea-green-400: #71c19d;
+  --color-sea-green-500: #4eb184;
+  --color-sea-green-600: #3e8e6a;
+  --color-sea-green-700: #2f6a4f;
+  --color-sea-green-800: #1f4735;
+  --color-sea-green-900: #10231a;
+  --color-sea-green-950: #0b1913;
+
+  --color-dark-emerald-50: #edf7f3;
+  --color-dark-emerald-100: #dbf0e7;
+  --color-dark-emerald-200: #b8e0ce;
+  --color-dark-emerald-300: #94d1b6;
+  --color-dark-emerald-400: #70c29d;
+  --color-dark-emerald-500: #4db385;
+  --color-dark-emerald-600: #3d8f6a;
+  --color-dark-emerald-700: #2e6b50;
+  --color-dark-emerald-800: #1f4735;
+  --color-dark-emerald-900: #0f241b;
+  --color-dark-emerald-950: #0b1913;
+
+  --color-pine-teal-50: #edf8f3;
+  --color-pine-teal-100: #dbf0e7;
+  --color-pine-teal-200: #b6e2d0;
+  --color-pine-teal-300: #92d3b8;
+  --color-pine-teal-400: #6dc5a0;
+  --color-pine-teal-500: #49b689;
+  --color-pine-teal-600: #3a926d;
+  --color-pine-teal-700: #2c6d52;
+  --color-pine-teal-800: #1d4937;
+  --color-pine-teal-900: #0f241b;
+  --color-pine-teal-950: #0a1a13;
+
+  --color-evergreen-50: #ebf9f4;
+  --color-evergreen-100: #d7f4ea;
+  --color-evergreen-200: #afe9d5;
+  --color-evergreen-300: #88ddbf;
+  --color-evergreen-400: #60d2aa;
+  --color-evergreen-500: #38c795;
+  --color-evergreen-600: #2d9f77;
+  --color-evergreen-700: #227759;
+  --color-evergreen-800: #16503c;
+  --color-evergreen-900: #0b281e;
+  --color-evergreen-950: #081c15;
+}
