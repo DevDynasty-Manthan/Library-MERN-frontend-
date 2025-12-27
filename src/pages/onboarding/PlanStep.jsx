@@ -1,115 +1,134 @@
-import React from 'react'
-import { useEffect,useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import OnboardLayout from '../../layouts/OnboardLayout.jsx';
-import { getAvailablePlans } from '../../features/auth/authApi.js';
-import { selectPlan } from '../../features/auth/authApi.js';
-// import { useAuth } from '../../features/auth/AuthContext.jsx';
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import OnboardLayout from "../../layouts/OnboardLayout.jsx";
+import { getAvailablePlans, selectPlan } from "../../features/auth/authApi.js";
+
 const PlanStep = () => {
-    const navigate = useNavigate();
-//    const { startOnboardingSession } = useAuth();
-   const [plans , setPlans] = useState([]);
-   useEffect(()=>{
-    const fetchPlans = async ()=>{
-        try{
-            const plans = await getAvailablePlans();
-            console.log("Available plans:", plans);
-            setPlans(plans.data);
-             
-        }
-        catch(error){
-            console.error("Error fetching plans:", error);
-        }
-    }
+  const navigate = useNavigate();
+
+  const [plans, setPlans] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchPlans = async () => {
+      try {
+        setLoading(true);
+        const plansRes = await getAvailablePlans();
+        setPlans(plansRes.data || []);
+      } catch (error) {
+        console.error("Error fetching plans:", error);
+        setPlans([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
     fetchPlans();
-   },[])
-   console.log("Plans state:", plans);
-   
-   const onSelectPlan = (plan)=>{
+  }, []);
 
-
-    console.log("Selected plan:", plan);
-    const planData = {
+  const onSelectPlan = async (plan) => {
+    try {
+      const planData = {
         planId: plan._id || plan.id,
         planName: plan.name,
         planCode: plan.code,
-        planFees: plan.fees
-    } 
-    selectPlan(planData)
-    .then((response)=>{
-        console.log("Plan selection response:", response);
-        navigate('/onboarding/seat');
-        // Navigate to next step
-        // navigate('/onboarding/seat');
-    })
-    .catch((error)=>{
-        console.error("Error selecting plan:", error);
-    });
+        planFees: plan.fees,
+      };
 
-   }
+      const response = await selectPlan(planData);
+      console.log("Plan selection response:", response);
 
+      navigate("/onboarding/seat");
+    } catch (error) {
+      console.error("Error selecting plan:", error);
+    }
+  };
 
   return (
-   <OnboardLayout currentStep={2} totalSteps={4} stepLabels={['Admission','Plan','Seat','Payment']}>
-  <div className="space-y-8">
-    {/* Header */}
-    <div className="text-center mb-4">
-      <h1 className="text-4xl font-bold text-celadon-900">Choose Your Plan</h1>
-      <p className="mt-3 text-celadon-600 text-base">Select the plan that best fits your study needs</p>
-    </div>
+    <OnboardLayout
+      currentStep={2}
+      totalSteps={4}
+      stepLabels={["Admission", "Plan", "Seat", "Payment"]}
+    >
+      <div className="space-y-8">
+        {/* Header */}
+        <div className="mb-4 text-center">
+          <h1 className="text-4xl font-bold text-dark-emerald-900">
+            Choose Your Plan
+          </h1>
+          <p className="mt-3 text-base text-dark-emerald-700">
+            Select the plan that best fits your study needs
+          </p>
+        </div>
 
-    {/* Loading */}
-    {plans.length === 0 ? (
-      <div className="rounded-2xl border-2 border-celadon-200 bg-white p-8 text-center text-celadon-600 shadow-md">
-        <div className="inline-block animate-spin text-2xl mb-3">⏳</div>
-        <p className="font-medium">Loading available plans...</p>
-      </div>
-    ) : (
-      <div className="grid gap-6 md:grid-cols-2">
-        {plans.map((plan) => (
-          <div
-            key={plan._id || plan.id}
-            className="group rounded-2xl border-2 border-celadon-200 bg-white p-6 shadow-md transition hover:-translate-y-1 hover:shadow-2xl hover:border-celadon-400"
-          >
-            {/* Title */}
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <h2 className="text-xl font-bold text-celadon-900">{plan.name}</h2>
-                <p className="mt-1 text-sm text-celadon-700">{plan.code}</p>
-              </div>
-
-              <div className="rounded-xl bg-celadon-50 px-3 py-2 text-right">
-                <p className="text-sm text-celadon-700">Monthly</p>
-                <p className="text-2xl font-extrabold text-celadon-900">₹{plan.fees}</p>
-              </div>
-            </div>
-
-            {/* Features */}
-            <div className="mt-5 space-y-2">
-              {plan.features?.map((feature, i) => (
-                <div key={i} className="flex items-start gap-2 text-sm text-celadon-800">
-                  <span className="mt-1 inline-block h-2 w-2 rounded-full bg-celadon-500" />
-                  <p>{feature}</p>
-                </div>
-              ))}
-            </div>
-
-            {/* CTA */}
-            <button
-              type="button"
-              onClick={() => onSelectPlan(plan)}
-              className="mt-6 w-full rounded-xl bg-gradient-to-r from-celadon-600 to-celadon-700 px-4 py-3 font-semibold text-white shadow-md transition hover:shadow-lg hover:scale-[1.02] active:scale-95"
-            >
-              Select This Plan
-            </button>
+        {/* Loading */}
+        {loading ? (
+          <div className="rounded-3xl border border-ash-grey-200 bg-white p-10 text-center text-dark-emerald-700 shadow-sm">
+            <div className="mb-3 inline-block animate-spin text-2xl">⏳</div>
+            <p className="text-base font-semibold">Loading available plans...</p>
           </div>
-        ))}
+        ) : (
+          <div className="grid gap-6 md:grid-cols-2">
+            {plans.map((plan) => (
+              <div
+                key={plan._id || plan.id}
+                className="group rounded-3xl border border-ash-grey-200 bg-white p-7 shadow-sm transition hover:-translate-y-1 hover:border-pine-teal-300 hover:shadow-xl"
+              >
+                {/* Title */}
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <h2 className="text-2xl font-bold text-dark-emerald-900">
+                      {plan.name}
+                    </h2>
+                    <p className="mt-1 text-sm text-dark-emerald-700">
+                      {plan.code}
+                    </p>
+                  </div>
+
+                  <div className="rounded-2xl border border-ash-grey-200 bg-ash-grey-50 px-4 py-3 text-right">
+                    <p className="text-sm text-dark-emerald-700">Monthly</p>
+                    <p className="text-3xl font-extrabold text-dark-emerald-900">
+                      ₹{plan.fees}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Features */}
+                <div className="mt-6 space-y-3">
+                  {plan.features?.map((feature, i) => (
+                    <div
+                      key={i}
+                      className="flex items-start gap-3 text-base text-dark-emerald-800"
+                    >
+                      <span className="mt-2 inline-block h-2.5 w-2.5 rounded-full bg-pine-teal-500" />
+                      <p>{feature}</p>
+                    </div>
+                  ))}
+                </div>
+
+                {/* CTA */}
+                <button
+                  type="button"
+                  onClick={() => onSelectPlan(plan)}
+                  className="
+                    mt-7 w-full rounded-2xl
+                    bg-gradient-to-r from-pine-teal-600 to-pine-teal-700
+                    px-5 py-4 text-base font-semibold text-dark-emerald-950
+                    shadow-lg transition
+                    hover:from-pine-teal-500 hover:to-pine-teal-600 hover:shadow-xl
+                    active:scale-[0.99]
+                    focus:outline-none focus:ring-2 focus:ring-pine-teal-300/70
+                  "
+                >
+                  Select This Plan
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
-    )}
-  </div>
-</OnboardLayout>
+    </OnboardLayout>
+  );
+};
 
-  )
-}
-
-export default PlanStep
+export default PlanStep;

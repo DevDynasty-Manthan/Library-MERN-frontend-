@@ -28,19 +28,17 @@ const SeatStep = () => {
           sessionDetails?.data?.sessionData?.plan;
 
         if (!planIdFromSession) {
-          setLoading(false);
+          setSeatPayload(null);
           return;
         }
 
         const seatRes = await getSeats(planIdFromSession);
-        // IMPORTANT: depends on your getSeats() helper.
-        // If getSeats returns response.data => seatRes.data is payload
-        // If getSeats returns response.data.data => seatRes is payload
         const payload = seatRes?.data ?? seatRes;
 
         setSeatPayload(payload);
       } catch (err) {
         console.error("Error fetching seats:", err);
+        setSeatPayload(null);
       } finally {
         setLoading(false);
       }
@@ -69,24 +67,29 @@ const SeatStep = () => {
     >
       <div className="mx-auto w-full max-w-4xl">
         <div className="mb-8">
-          <h2 className="text-3xl font-bold text-slate-900">Select Your Seat</h2>
-          <p className="mt-2 text-base text-slate-600">
+          <h2 className="text-3xl font-bold text-dark-emerald-900">
+            Select Your Seat
+          </h2>
+          <p className="mt-2 text-base text-dark-emerald-700">
             Pick one available seat. Occupied seats are disabled.
           </p>
         </div>
 
         {/* Plan info */}
         {seatPayload && (
-          <div className="mb-6 rounded-xl border-2 border-slate-300 bg-gradient-to-r from-slate-50 to-blue-50 p-4 shadow-sm">
-            <div className="flex flex-wrap gap-x-8 gap-y-2 text-base text-slate-800 font-medium">
+          <div className="mb-6 rounded-3xl border border-ash-grey-200 bg-white p-5 shadow-sm">
+            <div className="flex flex-wrap gap-x-10 gap-y-2 text-base font-semibold text-dark-emerald-800">
               <div>
-                Plan: <span className="font-medium">{seatPayload.planCode}</span>
+                Plan: <span className="text-dark-emerald-900">{seatPayload.planCode}</span>
               </div>
               <div>
-                Capacity: <span className="font-medium">{seatPayload.capacity}</span>
+                Capacity: <span className="text-dark-emerald-900">{seatPayload.capacity}</span>
               </div>
               <div>
-                Occupied: <span className="font-medium">{seatPayload.occupiedSeats?.length || 0}</span>
+                Occupied:{" "}
+                <span className="text-dark-emerald-900">
+                  {seatPayload.occupiedSeats?.length || 0}
+                </span>
               </div>
             </div>
           </div>
@@ -94,14 +97,14 @@ const SeatStep = () => {
 
         {/* Loading / empty states */}
         {loading && (
-          <div className="rounded-lg border-2 border-blue-300 bg-blue-50 p-6 text-blue-700 text-center shadow-md">
-            <div className="inline-block animate-spin text-2xl mb-2">🔄</div>
-            <p className="font-medium">Loading available seats...</p>
+          <div className="rounded-3xl border border-ash-grey-200 bg-ash-grey-50 p-8 text-center text-dark-emerald-700 shadow-sm">
+            <div className="mb-2 inline-block animate-spin text-2xl">🔄</div>
+            <p className="text-base font-semibold">Loading available seats...</p>
           </div>
         )}
 
         {!loading && !seatPayload && (
-          <div className="rounded-lg border border-amber-200 bg-amber-50 p-6 text-amber-900">
+          <div className="rounded-3xl border border-light-coral-200 bg-light-coral-50 p-6 text-light-coral-900">
             Plan not found in session. Go back and select a plan again.
           </div>
         )}
@@ -109,35 +112,36 @@ const SeatStep = () => {
         {/* Seat grid */}
         {!loading && seatPayload && (
           <>
-            <div className="rounded-xl border-2 border-slate-300 bg-white p-5 shadow-md">
-              <div className="mb-4 flex flex-wrap items-center gap-4 text-sm text-slate-700 font-medium">
+            <div className="rounded-3xl border border-ash-grey-200 bg-white p-6 shadow-sm">
+              {/* Legend */}
+              <div className="mb-5 flex flex-wrap items-center gap-5 text-sm font-semibold text-dark-emerald-700">
                 <span className="inline-flex items-center gap-2">
-                  <span className="h-3 w-3 rounded bg-emerald-100 ring-1 ring-emerald-300" />
+                  <span className="h-3.5 w-3.5 rounded bg-pine-teal-100 ring-1 ring-pine-teal-300" />
                   Available
                 </span>
                 <span className="inline-flex items-center gap-2">
-                  <span className="h-3 w-3 rounded bg-slate-200 ring-1 ring-slate-300" />
+                  <span className="h-3.5 w-3.5 rounded bg-ash-grey-200 ring-1 ring-ash-grey-300" />
                   Occupied
                 </span>
                 <span className="inline-flex items-center gap-2">
-                  <span className="h-3 w-3 rounded bg-emerald-600 ring-1 ring-emerald-700" />
+                  <span className="h-3.5 w-3.5 rounded bg-pine-teal-600 ring-1 ring-pine-teal-700" />
                   Selected
                 </span>
               </div>
 
-              <div className="grid grid-cols-4 gap-2 sm:grid-cols-6 md:grid-cols-8">
+              <div className="grid grid-cols-4 gap-3 sm:grid-cols-6 md:grid-cols-8">
                 {totalSeats.map((seatNo) => {
                   const isOccupied = occupiedSet.has(seatNo);
                   const isSelected = selectedSeat === seatNo;
 
                   const base =
-                    "h-10 rounded-md text-sm font-medium transition focus:outline-none focus:ring-2 focus:ring-emerald-400";
+                    "h-11 rounded-2xl text-sm font-semibold transition focus:outline-none focus:ring-2 focus:ring-pine-teal-300/70";
                   const occupied =
-                    "cursor-not-allowed bg-slate-200 text-slate-400 ring-1 ring-slate-300";
+                    "cursor-not-allowed bg-ash-grey-200 text-ash-grey-500 ring-1 ring-ash-grey-300";
                   const available =
-                    "bg-emerald-50 text-emerald-900 ring-1 ring-emerald-200 hover:bg-emerald-100";
+                    "bg-pine-teal-50 text-dark-emerald-900 ring-1 ring-pine-teal-200 hover:bg-pine-teal-100";
                   const selected =
-                    "bg-emerald-600 text-white ring-1 ring-emerald-700";
+                    "bg-pine-teal-600 text-dark-emerald-950 ring-1 ring-pine-teal-700";
 
                   return (
                     <button
@@ -160,11 +164,11 @@ const SeatStep = () => {
             </div>
 
             {/* Actions */}
-            <div className="mt-5 flex items-center justify-between">
+            <div className="mt-6 flex items-center justify-between">
               <button
                 type="button"
                 onClick={() => navigate(-1)}
-                className="rounded-md border border-slate-300 bg-white px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
+                className="rounded-2xl border border-ash-grey-200 bg-white px-5 py-3 text-base font-semibold text-dark-emerald-800 transition hover:bg-ash-grey-50 focus:outline-none focus:ring-2 focus:ring-pine-teal-300/60"
               >
                 Back
               </button>
@@ -173,7 +177,7 @@ const SeatStep = () => {
                 type="button"
                 disabled={!selectedSeat}
                 onClick={handleContinue}
-                className="rounded-md bg-emerald-600 px-5 py-2 text-sm font-medium text-white hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
+                className="rounded-2xl bg-pine-teal-600 px-6 py-3 text-base font-semibold text-dark-emerald-950 transition hover:bg-pine-teal-500 disabled:cursor-not-allowed disabled:opacity-60 focus:outline-none focus:ring-2 focus:ring-pine-teal-300/60"
               >
                 Continue
               </button>

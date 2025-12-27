@@ -1,47 +1,64 @@
-import React from 'react'
+import React from "react";
 
-const OnboardLayout = ({ children, currentStep = 1, totalSteps = 4, stepLabels = ['Admission', 'Plan', 'Seat', 'Payment'] }) => {
+const OnboardLayout = ({
+  children,
+  currentStep = 1,
+  totalSteps = 4,
+  stepLabels = ["Admission", "Plan", "Seat", "Payment"],
+}) => {
   return (
-    <div className="min-h-screen w-full bg-gradient-to-br from-celadon-50 via-sky-50 to-celadon-100">
+    <div className="min-h-screen w-full bg-gradient-to-br from-ash-grey-50 via-platinum-50 to-pine-teal-50">
       {/* Header */}
-      <div className="bg-gradient-to-r from-celadon-600 to-celadon-700 shadow-lg">
-        <div className="max-w-6xl mx-auto px-6 py-10">
-          <h1 className="text-4xl font-bold text-white tracking-tight">Complete Your Onboarding</h1>
-          <p className="text-celadon-100 mt-3 text-sm font-medium">Step {currentStep} of {totalSteps} • {stepLabels[currentStep - 1]}</p>
+      <div className="bg-gradient-to-r from-dark-emerald-900 to-dark-emerald-950 shadow-lg">
+        <div className="mx-auto max-w-6xl px-6 py-10">
+          <h1 className="text-4xl font-bold tracking-tight text-platinum-50">
+            Complete Your Onboarding
+          </h1>
+          <p className="mt-3 text-sm font-medium text-platinum-200">
+            Step {currentStep} of {totalSteps} • {stepLabels[currentStep - 1]}
+          </p>
         </div>
       </div>
 
       {/* Progress Bar */}
-      <div className="bg-white/95 backdrop-blur border-b border-celadon-200 shadow-sm">
-        <div className="max-w-6xl mx-auto px-6 py-8">
+      <div className="border-b border-ash-grey-200 bg-white/90 backdrop-blur shadow-sm">
+        <div className="mx-auto max-w-6xl px-6 py-8">
           <div className="flex items-center justify-between">
             {stepLabels.map((label, index) => (
               <React.Fragment key={index}>
                 {/* Step Circle */}
-                <div className="flex flex-col items-center flex-1">
+                <div className="flex flex-1 flex-col items-center">
                   <div
-                    className={`w-14 h-14 rounded-full flex items-center justify-center font-bold text-lg transition-all duration-300 shadow-md ${
-                      index + 1 <= currentStep
-                        ? 'bg-gradient-to-br from-celadon-500 to-celadon-700 text-white shadow-lg scale-105'
-                        : index + 1 === currentStep ? 'bg-celadon-200 text-celadon-700 ring-2 ring-celadon-400'
-                        : 'bg-celadon-100 text-celadon-500'
+                    className={`flex h-14 w-14 items-center justify-center rounded-full text-lg font-bold shadow-md transition-all duration-300 ${
+                      index + 1 < currentStep
+                        ? "bg-gradient-to-br from-pine-teal-500 to-pine-teal-700 text-dark-emerald-950 shadow-lg scale-105"
+                        : index + 1 === currentStep
+                        ? "bg-pine-teal-100 text-dark-emerald-900 ring-2 ring-pine-teal-400"
+                        : "bg-ash-grey-100 text-ash-grey-600"
                     }`}
                   >
-                    {index + 1 <= currentStep ? '✓' : index + 1}
+                    {index + 1 < currentStep ? "✓" : index + 1}
                   </div>
-                  <p className={`mt-2 text-sm font-medium ${
-                    index + 1 <= currentStep ? 'text-celadon-600' : 'text-celadon-500'
-                  }`}>
+
+                  <p
+                    className={`mt-2 text-sm font-medium ${
+                      index + 1 <= currentStep
+                        ? "text-dark-emerald-800"
+                        : "text-ash-grey-600"
+                    }`}
+                  >
                     {label}
                   </p>
                 </div>
 
                 {/* Connector Line */}
                 {index < stepLabels.length - 1 && (
-                  <div className="flex-1 mx-2 mb-8">
+                  <div className="mx-2 mb-8 flex-1">
                     <div
                       className={`h-1 rounded transition-all duration-300 ${
-                        index + 1 < currentStep ? 'bg-celadon-600' : 'bg-celadon-200'
+                        index + 1 < currentStep
+                          ? "bg-pine-teal-600"
+                          : "bg-ash-grey-200"
                       }`}
                     />
                   </div>
@@ -53,20 +70,20 @@ const OnboardLayout = ({ children, currentStep = 1, totalSteps = 4, stepLabels =
       </div>
 
       {/* Main Content */}
-      <main className="max-w-6xl mx-auto px-6 py-12">
-        <div className="bg-white rounded-2xl shadow-xl p-8 md:p-12 min-h-96 border border-celadon-100/50 backdrop-blur-sm">
+      <main className="mx-auto max-w-6xl px-6 py-12">
+        <div className="min-h-96 rounded-3xl border border-ash-grey-200 bg-white p-8 shadow-xl md:p-12">
           {children}
         </div>
       </main>
 
       {/* Footer */}
-      <div className="bg-gradient-to-r from-celadon-50 to-sky-50 border-t border-celadon-200 mt-12">
-        <div className="max-w-6xl mx-auto px-6 py-6 text-center text-celadon-700 text-sm font-medium">
+      <div className="mt-12 border-t border-ash-grey-200 bg-gradient-to-r from-platinum-50 to-ash-grey-50">
+        <div className="mx-auto max-w-6xl px-6 py-6 text-center text-sm font-medium text-dark-emerald-800">
           <p>✓ Your progress is automatically saved</p>
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default OnboardLayout
+export default OnboardLayout;

@@ -118,3 +118,36 @@ export const verifyOtp = async (otpData)=>{
         throw error
     }
 }
+
+export const getStudentData = async ()=>{
+    try{ 
+        const response = await apiClient.get('/students/me')
+        return response.data;
+
+    }
+    catch(error){
+        console.log(error)
+        throw error
+    }
+}
+
+export const getUser = async ()=>{
+    try{
+      const response = await apiClient.get("/users/me");
+      return response.data;
+    }
+    catch(error){
+        throw error
+    }
+}
+
+export const getPayments = async ()=>{
+    try{
+      const response = await apiClient.get('payments/me')
+      return response.data;
+    }
+    catch(error){
+        console.error(error)
+        throw error
+    }
+}

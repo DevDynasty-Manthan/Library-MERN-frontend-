@@ -1,12 +1,17 @@
-import Navbar from '../components/navigation/Navbar.jsx';
+import React from "react";
+import Navbar from "../components/navigation/Navbar.jsx";
 
-const PublicLayout = ({children})=>{
-   return(
-    <div className="flex flex-col h-screen w-full">
-    <Navbar />
-    <main className="flex-1 w-full overflow-auto">{children}</main> 
+const PublicLayout = ({ children }) => {
+  return (
+    <div className="flex min-h-screen w-full flex-col bg-ash-grey-50">
+      <Navbar />
+
+      {/* Main content scrolls, header stays sticky */}
+      <main className="flex-1 w-full overflow-y-auto">
+        {children}
+      </main>
     </div>
-   )
-}
+  );
+};
 
 export default PublicLayout;
