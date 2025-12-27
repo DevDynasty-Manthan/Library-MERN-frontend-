@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import OnboardLayout from '../../layouts/OnboardLayout.jsx';
 import { getAvailablePlans } from '../../features/auth/authApi.js';
 import { selectPlan } from '../../features/auth/authApi.js';
-import { useAuth } from '../../features/auth/AuthContext.jsx';
+// import { useAuth } from '../../features/auth/AuthContext.jsx';
 const PlanStep = () => {
     const navigate = useNavigate();
 //    const { startOnboardingSession } = useAuth();
@@ -53,22 +53,23 @@ const PlanStep = () => {
    <OnboardLayout currentStep={2} totalSteps={4} stepLabels={['Admission','Plan','Seat','Payment']}>
   <div className="space-y-8">
     {/* Header */}
-    <div className="text-center">
-      <h1 className="text-3xl font-bold text-celadon-900">Choose Your Plan</h1>
-      <p className="mt-2 text-celadon-700">Select the plan that best fits your needs.</p>
+    <div className="text-center mb-4">
+      <h1 className="text-4xl font-bold text-celadon-900">Choose Your Plan</h1>
+      <p className="mt-3 text-celadon-600 text-base">Select the plan that best fits your study needs</p>
     </div>
 
     {/* Loading */}
     {plans.length === 0 ? (
-      <div className="rounded-2xl border border-celadon-200 bg-white/70 p-8 text-center text-celadon-700 shadow-sm">
-        Loading plans...
+      <div className="rounded-2xl border-2 border-celadon-200 bg-white p-8 text-center text-celadon-600 shadow-md">
+        <div className="inline-block animate-spin text-2xl mb-3">⏳</div>
+        <p className="font-medium">Loading available plans...</p>
       </div>
     ) : (
       <div className="grid gap-6 md:grid-cols-2">
         {plans.map((plan) => (
           <div
             key={plan._id || plan.id}
-            className="group rounded-2xl border border-celadon-200 bg-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:shadow-xl"
+            className="group rounded-2xl border-2 border-celadon-200 bg-white p-6 shadow-md transition hover:-translate-y-1 hover:shadow-2xl hover:border-celadon-400"
           >
             {/* Title */}
             <div className="flex items-start justify-between gap-4">
@@ -97,9 +98,9 @@ const PlanStep = () => {
             <button
               type="button"
               onClick={() => onSelectPlan(plan)}
-              className="mt-6 w-full rounded-xl bg-celadon-600 px-4 py-3 font-semibold text-white shadow-md transition hover:bg-celadon-700"
+              className="mt-6 w-full rounded-xl bg-gradient-to-r from-celadon-600 to-celadon-700 px-4 py-3 font-semibold text-white shadow-md transition hover:shadow-lg hover:scale-[1.02] active:scale-95"
             >
-              Select Plan
+              Select This Plan
             </button>
           </div>
         ))}

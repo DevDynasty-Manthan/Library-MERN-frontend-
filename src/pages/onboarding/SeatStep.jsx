@@ -68,17 +68,17 @@ const SeatStep = () => {
       stepLabels={["Admission", "Plan", "Seat", "Payment"]}
     >
       <div className="mx-auto w-full max-w-4xl">
-        <div className="mb-5">
-          <h2 className="text-xl font-semibold text-slate-900">Select your seat</h2>
-          <p className="mt-1 text-sm text-slate-600">
+        <div className="mb-8">
+          <h2 className="text-3xl font-bold text-slate-900">Select Your Seat</h2>
+          <p className="mt-2 text-base text-slate-600">
             Pick one available seat. Occupied seats are disabled.
           </p>
         </div>
 
         {/* Plan info */}
         {seatPayload && (
-          <div className="mb-5 rounded-lg border border-slate-200 bg-white p-4">
-            <div className="flex flex-wrap gap-x-6 gap-y-1 text-sm text-slate-700">
+          <div className="mb-6 rounded-xl border-2 border-slate-300 bg-gradient-to-r from-slate-50 to-blue-50 p-4 shadow-sm">
+            <div className="flex flex-wrap gap-x-8 gap-y-2 text-base text-slate-800 font-medium">
               <div>
                 Plan: <span className="font-medium">{seatPayload.planCode}</span>
               </div>
@@ -94,8 +94,9 @@ const SeatStep = () => {
 
         {/* Loading / empty states */}
         {loading && (
-          <div className="rounded-lg border border-slate-200 bg-white p-6 text-slate-700">
-            Loading available seats...
+          <div className="rounded-lg border-2 border-blue-300 bg-blue-50 p-6 text-blue-700 text-center shadow-md">
+            <div className="inline-block animate-spin text-2xl mb-2">🔄</div>
+            <p className="font-medium">Loading available seats...</p>
           </div>
         )}
 
@@ -108,8 +109,8 @@ const SeatStep = () => {
         {/* Seat grid */}
         {!loading && seatPayload && (
           <>
-            <div className="rounded-lg border border-slate-200 bg-white p-4">
-              <div className="mb-3 flex flex-wrap items-center gap-3 text-xs text-slate-600">
+            <div className="rounded-xl border-2 border-slate-300 bg-white p-5 shadow-md">
+              <div className="mb-4 flex flex-wrap items-center gap-4 text-sm text-slate-700 font-medium">
                 <span className="inline-flex items-center gap-2">
                   <span className="h-3 w-3 rounded bg-emerald-100 ring-1 ring-emerald-300" />
                   Available

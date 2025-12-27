@@ -57,14 +57,21 @@ const AdmissionStep = () => {
   return (
     <div>
       <OnboardLayout currentStep={1} totalSteps={4} stepLabels={['Admission', 'Plan', 'Seat', 'Payment']}>
-        <h2 className="text-2xl font-bold text-celadon-900 mb-2">Admission Information</h2>
-        <p className="text-celadon-700 mb-8">Please provide your admission details to proceed.</p>
+        <div className="mb-8">
+          <h2 className="text-3xl font-bold text-celadon-900">Admission Information</h2>
+          <p className="text-celadon-600 mt-2 text-sm">Please provide your admission details to proceed.</p>
+        </div>
         
         {/* Error Message Alert */}
         {submitError && (
-          <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4">
-            <p className="text-red-800 font-medium">Error: {submitError}</p>
-            <p className="text-red-600 text-sm mt-1">Please make sure you're logged in and try again.</p>
+          <div className="mb-6 bg-red-50/90 border-l-4 border-red-500 rounded-lg p-4 shadow-sm">
+            <div className="flex gap-3">
+              <span className="text-red-600 text-xl">⚠️</span>
+              <div>
+                <p className="text-red-900 font-semibold">{submitError}</p>
+                <p className="text-red-700 text-sm mt-1">Please make sure you're logged in and try again.</p>
+              </div>
+            </div>
           </div>
         )}
         

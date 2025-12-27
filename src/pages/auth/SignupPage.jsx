@@ -25,6 +25,8 @@ const SignupPage = () => {
     startOnboardingSession({
       token: result.data.token,
       sessionId: result.data.sessionId,
+      currentStep: result.data.currentStep,
+      email: result.data.email
     });
     console.log("Registration successful:", result);
     navigate('/onboarding/admission');

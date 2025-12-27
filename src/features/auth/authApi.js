@@ -98,3 +98,23 @@ export const verifyPayment = async (verifyPaymentData)=>{
         throw error;
     }
 }
+
+export const sendOtpForVerification = async ()=>{
+    try{
+        const response = await apiClient.get('/onboarding/step5/create-otp')
+        return response.data;
+    }
+    catch(error){
+        throw error
+    }
+}
+
+export const verifyOtp = async (otpData)=>{
+    try{
+         const response =  await apiClient.post("/onboarding/step5/verify-otp", otpData)
+         return response.data;
+    }
+    catch(error){
+        throw error
+    }
+}

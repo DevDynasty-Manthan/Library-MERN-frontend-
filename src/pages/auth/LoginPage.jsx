@@ -1,9 +1,10 @@
-import React, { useState } from "react";
+import React, { useState,useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { Link, useNavigate } from "react-router-dom";
 import { loginUser } from "../../features/auth/authApi.js";
 import PublicLayout from "../../layouts/PublicLayout.jsx";
 import { useAuth } from "../../features/auth/AuthContext.jsx";
+import { getSessionDetails } from "../../features/auth/authApi.js";
 const LoginPage = () => {
   const navigate = useNavigate();
   const {login} = useAuth();
@@ -12,7 +13,7 @@ const LoginPage = () => {
     handleSubmit,
     formState: { errors, isSubmitting },
   } = useForm();
-
+ 
   const [showPassword, setShowPassword] = useState(false);
   const [serverError, setServerError] = useState(null);
 
@@ -22,6 +23,22 @@ const LoginPage = () => {
       console.log("Sending login data", data);
       const result = await loginUser(data);
     await login(result);
+    const getStatus = await getSessionDetails();
+    const status = getStatus.data;
+    console.log(status);
+    // const currentStep = status.currentStep;
+   const stepToRoute = {
+      2: "/onboarding/admission",
+      3: "/onboarding/plan",
+      4: "/onboarding/seat",
+      5: "/onboarding/payment",
+    };
+    console.log(status.isCompleted)
+    if (!status.isCompleted) {
+      const route = stepToRoute[status.currentStep] || "/onboarding/admission";
+      navigate(route, { replace: true });
+      return; // IMPORTANT: stop here
+    }
       console.log("Login successful:", result);
       // later: save token & user, then redirect based on role
       navigate("/");
