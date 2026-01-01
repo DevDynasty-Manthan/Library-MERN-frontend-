@@ -1,77 +1,58 @@
 import React from "react";
 import { NavLink, Link } from "react-router-dom";
-
-const baseLink =
-  "flex items-center gap-3 rounded-2xl px-4 py-3 text-base font-semibold transition focus:outline-none focus:ring-2 focus:ring-pine-teal-300/60";
+import { LayoutDashboard, CreditCard, User, LogOut, Home } from "lucide-react";
 
 const StudentSidebar = () => {
+  const links = [
+    { to: "/student/dashboard", label: "Dashboard", icon: <LayoutDashboard size={20} /> },
+    { to: "/student/payments", label: "Payments", icon: <CreditCard size={20} /> },
+    { to: "/student/profile", label: "Profile", icon: <User size={20} /> },
+  ];
+
   return (
-    <aside className="hidden w-72 shrink-0 border-r border-ash-grey-200 bg-white md:block">
-      <div className="px-5 py-5">
-        {/* Sidebar header */}
-        <Link to="/student/dashboard" className="block">
-          <div className="rounded-3xl border border-ash-grey-200 bg-ash-grey-50 px-4 py-4">
-            <p className="text-lg font-semibold text-dark-emerald-900">Student</p>
-            <p className="mt-1 text-sm text-dark-emerald-700">Library Portal</p>
+    <aside className="hidden w-72 shrink-0 bg-[#0d1b18] text-white md:flex flex-col min-h-screen sticky top-0">
+      <div className="px-6 py-10 flex flex-col h-full">
+        {/* Brand */}
+        <Link to="/" className="flex items-center gap-3 px-2 mb-12">
+          <div className="h-10 w-10 bg-[#11d4a4] rounded-xl flex items-center justify-center text-[#0d1b18] font-[900] text-xl">
+            S
           </div>
+          <span className="text-xl font-[900] tracking-tight">StudySpace</span>
         </Link>
 
         {/* Navigation */}
-        <nav className="mt-5 space-y-2">
-          <NavLink
-            to="/student/dashboard"
-            className={({ isActive }) =>
-              `${baseLink} ${
-                isActive
-                  ? "bg-pine-teal-600 text-dark-emerald-950 shadow-sm"
-                  : "text-dark-emerald-800 hover:bg-pine-teal-50"
-              }`
-            }
-          >
-            Dashboard
-          </NavLink>
-
-          <NavLink
-            to="/student/payments"
-            className={({ isActive }) =>
-              `${baseLink} ${
-                isActive
-                  ? "bg-pine-teal-600 text-dark-emerald-950 shadow-sm"
-                  : "text-dark-emerald-800 hover:bg-pine-teal-50"
-              }`
-            }
-          >
-            Payments
-          </NavLink>
-
-          <NavLink
-            to="/student/profile"
-            className={({ isActive }) =>
-              `${baseLink} ${
-                isActive
-                  ? "bg-pine-teal-600 text-dark-emerald-950 shadow-sm"
-                  : "text-dark-emerald-800 hover:bg-pine-teal-50"
-              }`
-            }
-          >
-            Profile
-          </NavLink>
+        <nav className="space-y-2 flex-1">
+          {links.map((link) => (
+            <NavLink
+              key={link.to}
+              to={link.to}
+              className={({ isActive }) =>
+                `flex items-center gap-3 px-4 py-3.5 rounded-2xl text-sm font-bold transition-all duration-200 ${
+                  isActive
+                    ? "bg-[#11d4a4] text-[#0d1b18] shadow-lg shadow-[#11d4a4]/20"
+                    : "text-gray-400 hover:bg-white/5 hover:text-white"
+                }`
+              }
+            >
+              {link.icon}
+              {link.label}
+            </NavLink>
+          ))}
         </nav>
 
-        {/* Bottom action */}
-        <div className="mt-6 border-t border-ash-grey-200 pt-5">
-          <NavLink
+        {/* Bottom Actions */}
+        <div className="pt-6 border-t border-white/10 space-y-2">
+          <Link
             to="/"
-            className={({ isActive }) =>
-              `${baseLink} ${
-                isActive
-                  ? "bg-pine-teal-600 text-dark-emerald-950 shadow-sm"
-                  : "text-dark-emerald-800 hover:bg-pine-teal-50"
-              }`
-            }
+            className="flex items-center gap-3 px-4 py-3.5 text-sm font-bold text-gray-400 hover:text-white transition-colors"
           >
-            Home
-          </NavLink>
+            <Home size={20} />
+            Back to Home
+          </Link>
+          <button className="w-full flex items-center gap-3 px-4 py-3.5 text-sm font-bold text-rose-400 hover:bg-rose-500/10 rounded-2xl transition-colors">
+            <LogOut size={20} />
+            Logout
+          </button>
         </div>
       </div>
     </aside>

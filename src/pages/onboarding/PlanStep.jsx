@@ -2,19 +2,22 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import OnboardLayout from "../../layouts/OnboardLayout.jsx";
 import { getAvailablePlans, selectPlan } from "../../features/auth/authApi.js";
+import { Check, ArrowRight, Loader2, Sparkles } from "lucide-react";
 
 const PlanStep = () => {
   const navigate = useNavigate();
-
   const [plans, setPlans] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [selectingId, setSelectingId] = useState(null);
 
   useEffect(() => {
     const fetchPlans = async () => {
       try {
         setLoading(true);
         const plansRes = await getAvailablePlans();
-        setPlans(plansRes.data || []);
+        // DEBUG: Ensure we are accessing the correct data nesting
+        const data = plansRes?.data || plansRes || [];
+        setPlans(Array.isArray(data) ? data : []);
       } catch (error) {
         console.error("Error fetching plans:", error);
         setPlans([]);
@@ -22,25 +25,37 @@ const PlanStep = () => {
         setLoading(false);
       }
     };
-
     fetchPlans();
   }, []);
 
   const onSelectPlan = async (plan) => {
+    // DEBUG: Safeguard ID extraction
+    const currentId = plan._id || plan.id;
+    if (!currentId) {
+      console.error("Plan ID missing", plan);
+      return;
+    }
+
     try {
+      setSelectingId(currentId);
+      
       const planData = {
-        planId: plan._id || plan.id,
+        planId: currentId,
         planName: plan.name,
         planCode: plan.code,
         planFees: plan.fees,
       };
 
-      const response = await selectPlan(planData);
-      console.log("Plan selection response:", response);
-
-      navigate("/onboarding/seat");
+      const res = await selectPlan(planData);
+      
+      // DEBUG: Only navigate if the response is successful
+      if (res) {
+        navigate("/onboarding/seat");
+      }
     } catch (error) {
       console.error("Error selecting plan:", error);
+      // IMPORTANT: Reset loading state on error so user can try again
+      setSelectingId(null);
     }
   };
 
@@ -50,82 +65,93 @@ const PlanStep = () => {
       totalSteps={4}
       stepLabels={["Admission", "Plan", "Seat", "Payment"]}
     >
-      <div className="space-y-8">
-        {/* Header */}
-        <div className="mb-4 text-center">
-          <h1 className="text-4xl font-bold text-dark-emerald-900">
-            Choose Your Plan
-          </h1>
-          <p className="mt-3 text-base text-dark-emerald-700">
-            Select the plan that best fits your study needs
-          </p>
+      <div className="text-center mb-12">
+        <h1 className="text-3xl md:text-4xl font-[900] text-[#0d1b18] tracking-tight mb-4">
+          Choose the right plan for your studies
+        </h1>
+        <p className="text-lg text-gray-500 font-bold max-w-xl mx-auto">
+          Invest in your focus with our tailored study packages. Access premium resources and quiet zones.
+        </p>
+      </div>
+
+      {loading ? (
+        <div className="flex flex-col items-center justify-center py-20 text-[#11d4a4]">
+          <Loader2 className="animate-spin mb-4" size={48} strokeWidth={2.5} />
+          <p className="font-[900] uppercase tracking-widest text-sm text-gray-400">Loading Plans...</p>
         </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8 items-stretch"> {/* Changed items-start to items-stretch for equal height cards */}
+          {plans.map((plan) => {
+            const planId = plan._id || plan.id;
+            const isScholar = plan.name?.toLowerCase().includes("scholar");
+            const isSelecting = selectingId === planId;
 
-        {/* Loading */}
-        {loading ? (
-          <div className="rounded-3xl border border-ash-grey-200 bg-white p-10 text-center text-dark-emerald-700 shadow-sm">
-            <div className="mb-3 inline-block animate-spin text-2xl">⏳</div>
-            <p className="text-base font-semibold">Loading available plans...</p>
-          </div>
-        ) : (
-          <div className="grid gap-6 md:grid-cols-2">
-            {plans.map((plan) => (
+            return (
               <div
-                key={plan._id || plan.id}
-                className="group rounded-3xl border border-ash-grey-200 bg-white p-7 shadow-sm transition hover:-translate-y-1 hover:border-pine-teal-300 hover:shadow-xl"
+                key={planId}
+                className={`relative flex flex-col  p-6 lg:p-8 bg-white rounded-[32px] border-2 transition-all duration-300 group hover:-translate-y-1 ${
+                  isScholar 
+                    ? "border-[#11d4a4] shadow-[0_20px_40px_-12px_rgba(17,212,164,0.15)] z-10" 
+                    : "border-[#e7f3f0] hover:border-[#11d4a4]/50"
+                }`}
               >
-                {/* Title */}
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <h2 className="text-2xl font-bold text-dark-emerald-900">
-                      {plan.name}
-                    </h2>
-                    <p className="mt-1 text-sm text-dark-emerald-700">
-                      {plan.code}
-                    </p>
+                {isScholar && (
+                  <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-[#11d4a4] text-[#0d1b18] text-[10px] font-[900] uppercase tracking-widest py-1.5 px-4 rounded-full shadow-sm whitespace-nowrap">
+                    Recommended
                   </div>
+                )}
 
-                  <div className="rounded-2xl border border-ash-grey-200 bg-ash-grey-50 px-4 py-3 text-right">
-                    <p className="text-sm text-dark-emerald-700">Monthly</p>
-                    <p className="text-3xl font-extrabold text-dark-emerald-900">
-                      ₹{plan.fees}
-                    </p>
-                  </div>
+                <div className="mb-6">
+                  <h3 className="text-xl font-[900] text-[#0d1b18] mb-1">{plan.name}</h3>
+                  <p className="text-sm text-gray-500 font-bold">{plan.code || "Tailored for focus"}</p>
                 </div>
 
-                {/* Features */}
-                <div className="mt-6 space-y-3">
-                  {plan.features?.map((feature, i) => (
-                    <div
-                      key={i}
-                      className="flex items-start gap-3 text-base text-dark-emerald-800"
-                    >
-                      <span className="mt-2 inline-block h-2.5 w-2.5 rounded-full bg-pine-teal-500" />
-                      <p>{feature}</p>
+                <div className="flex items-baseline gap-1 mb-8">
+                  <span className="text-4xl font-[900] text-[#0d1b18] tracking-tight">₹{plan.fees}</span>
+                  <span className="text-sm font-bold text-gray-400">/ mo</span>
+                </div>
+
+                {/* Features List - pushed to middle */}
+                <div className="space-y-4 mb-8 flex-grow">
+                  {(plan.features || ["Quiet Zone Access", "High-speed Wi-Fi", "Locker Access"]).map((feature, i) => (
+                    <div key={i} className="flex items-start gap-3 text-sm font-bold text-[#0d1b18]">
+                      <div className="mt-0.5 rounded-full bg-[#11d4a4]/10 p-0.5 shrink-0">
+                        <Check size={14} className="text-[#11d4a4]" strokeWidth={4} />
+                      </div>
+                      <span className="leading-tight">{feature}</span>
                     </div>
                   ))}
                 </div>
 
-                {/* CTA */}
                 <button
-                  type="button"
                   onClick={() => onSelectPlan(plan)}
-                  className="
-                    mt-7 w-full rounded-2xl
-                    bg-gradient-to-r from-pine-teal-600 to-pine-teal-700
-                    px-5 py-4 text-base font-semibold text-dark-emerald-950
-                    shadow-lg transition
-                    hover:from-pine-teal-500 hover:to-pine-teal-600 hover:shadow-xl
-                    active:scale-[0.99]
-                    focus:outline-none focus:ring-2 focus:ring-pine-teal-300/70
-                  "
+                  disabled={!!selectingId}
+                  className={`w-full py-4 rounded-2xl font-[900] text-sm transition-all flex items-center justify-center gap-2 ${
+                    isScholar 
+                      ? "bg-[#11d4a4] text-[#0d1b18] hover:opacity-90 shadow-lg shadow-[#11d4a4]/20" 
+                      : "bg-[#f6f8f8] text-[#0d1b18] hover:bg-[#e7f3f0]"
+                  } disabled:opacity-50`}
                 >
-                  Select This Plan
+                  {isSelecting ? (
+                    <Loader2 className="animate-spin" size={18} />
+                  ) : (
+                    <>
+                      Select {plan.name}
+                      <ArrowRight size={18} strokeWidth={3} />
+                    </>
+                  )}
                 </button>
               </div>
-            ))}
-          </div>
-        )}
+            );
+          })}
+        </div>
+      )}
+
+      <div className="mt-12 text-center">
+        <p className="text-xs font-bold text-gray-400 uppercase tracking-[0.2em] flex items-center justify-center gap-2">
+          <Sparkles size={14} className="text-[#11d4a4]" />
+          All plans include 24/7 basic support
+        </p>
       </div>
     </OnboardLayout>
   );

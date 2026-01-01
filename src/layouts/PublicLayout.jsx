@@ -1,17 +1,14 @@
 import React from "react";
-import Navbar from "../components/navigation/Navbar.jsx";
+import { Outlet } from "react-router-dom";
+import Navbar from "../components/public/Navbar.jsx";
+import Footer from "../components/public/Footer.jsx";
 
-const PublicLayout = ({ children }) => {
+export default function PublicLayout() {
   return (
-    <div className="flex min-h-screen w-full flex-col bg-ash-grey-50">
+    <div className="min-h-screen bg-bg text-text">
       <Navbar />
-
-      {/* Main content scrolls, header stays sticky */}
-      <main className="flex-1 w-full overflow-y-auto">
-        {children}
-      </main>
+      <Outlet />
+      <Footer />
     </div>
   );
-};
-
-export default PublicLayout;
+}

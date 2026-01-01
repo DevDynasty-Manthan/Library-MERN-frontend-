@@ -3,6 +3,7 @@ import OnboardLayout from "../../layouts/OnboardLayout.jsx";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { fillAdmissionDetails } from "../../features/auth/authApi.js";
+import { ArrowRight, School, User, Target, HelpCircle } from "lucide-react";
 
 const AdmissionStep = () => {
   const navigate = useNavigate();
@@ -12,6 +13,7 @@ const AdmissionStep = () => {
     handleSubmit,
     formState: { errors, isSubmitting },
     watch,
+    setValue,
   } = useForm({
     defaultValues: {
       purpose: [],
@@ -32,11 +34,9 @@ const AdmissionStep = () => {
   const onSubmit = async (data) => {
     try {
       setSubmitError(null);
-      const result = await fillAdmissionDetails(data);
-      console.log("Server response:", result);
+      await fillAdmissionDetails(data);
       navigate("/onboarding/plan");
     } catch (error) {
-      console.error("Error submitting admission details:", error);
       const errorMessage =
         error.response?.data?.message ||
         error.message ||
@@ -49,172 +49,145 @@ const AdmissionStep = () => {
     setShowOtherEducation(value === "other");
   };
 
+  // Helper to toggle multi-select chips
+  const togglePurpose = (option) => {
+    const current = selectedPurposes || [];
+    const updated = current.includes(option)
+      ? current.filter((item) => item !== option)
+      : [...current, option];
+    setValue("purpose", updated, { shouldValidate: true });
+  };
+
   return (
     <OnboardLayout
       currentStep={1}
       totalSteps={4}
       stepLabels={["Admission", "Plan", "Seat", "Payment"]}
     >
-      <div className="mb-8">
-        <h2 className="text-3xl font-bold text-dark-emerald-900">
-          Admission Information
-        </h2>
-        <p className="mt-2 text-base text-dark-emerald-700">
-          Please provide your admission details to proceed.
+      {/* Header Section */}
+      <div className="mb-10 text-center sm:text-left">
+        <h1 className="text-3xl font-[900] text-[#0d1b18] tracking-tight mb-2">
+          Tell us about your studies
+        </h1>
+        <p className="text-gray-500 font-bold text-lg">
+          We'll customize your study dashboard based on your academic needs.
         </p>
       </div>
 
-      {/* Error Message Alert */}
       {submitError && (
-        <div className="mb-6 rounded-2xl border border-deep-crimson-200 bg-deep-crimson-50 p-4 shadow-sm">
-          <div className="flex gap-3">
-            <span className="text-deep-crimson-600 text-xl">⚠</span>
-            <div>
-              <p className="font-semibold text-deep-crimson-900">
-                {submitError}
-              </p>
-              <p className="mt-1 text-sm text-deep-crimson-700">
-                Please make sure you're logged in and try again.
-              </p>
-            </div>
-          </div>
+        <div className="mb-6 bg-red-50 border border-red-100 text-red-600 px-4 py-3 rounded-2xl text-sm font-bold">
+          {submitError}
         </div>
       )}
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
-        {/* Purpose - Multiple Selection */}
-        <div>
-          <label className="mb-4 block text-base font-semibold text-dark-emerald-900">
-            Purpose of Joining (Select all that apply)
-          </label>
-
-          <div className="space-y-3">
-            {purposeOptions.map((option) => (
-              <div key={option} className="flex items-center">
-                <input
-                  type="checkbox"
-                  id={`purpose-${option}`}
-                  value={option}
-                  {...register("purpose")}
-                  className="h-5 w-5 cursor-pointer rounded border-ash-grey-300 text-pine-teal-600 focus:ring-2 focus:ring-pine-teal-300/70"
-                />
-                <label
-                  htmlFor={`purpose-${option}`}
-                  className="ml-3 cursor-pointer text-base font-medium text-dark-emerald-800"
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-10">
+        
+        {/* Purpose - Premium Chip Selection */}
+        <div className="space-y-4">
+          <div className="flex items-center gap-2 ml-1">
+            <label className="text-xs font-[900] text-[#0d1b18] uppercase tracking-[0.1em]">
+              Primary Goals
+            </label>
+            <HelpCircle size={14} className="text-gray-400" />
+          </div>
+          
+          <div className="flex flex-wrap gap-3">
+            {purposeOptions.map((option) => {
+              const isActive = selectedPurposes?.includes(option);
+              return (
+                <button
+                  key={option}
+                  type="button"
+                  onClick={() => togglePurpose(option)}
+                  className={`px-6 py-3 rounded-full font-bold text-sm transition-all border-2 flex items-center gap-2 ${
+                    isActive 
+                      ? "bg-[#11d4a4] border-[#11d4a4] text-[#0d1b18] shadow-lg shadow-[#11d4a4]/20" 
+                      : "bg-[#f6f8f8] border-transparent text-gray-500 hover:border-gray-200"
+                  }`}
                 >
+                  <Target size={16} strokeWidth={isActive ? 3 : 2} />
                   {option}
-                </label>
-              </div>
-            ))}
+                </button>
+              );
+            })}
+          </div>
+          {(!selectedPurposes || selectedPurposes.length === 0) && (
+            <p className="text-xs text-red-500 font-bold ml-1">Please select at least one goal</p>
+          )}
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          {/* Age Input */}
+          <div className="space-y-2">
+            <label className="text-xs font-[900] text-[#0d1b18] uppercase tracking-[0.1em] ml-1">
+              Your Age
+            </label>
+            <div className="relative group">
+              <User className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-[#11d4a4] transition-colors" size={20} />
+              <input
+                type="number"
+                placeholder="20"
+                {...register("age", { required: "Age is required" })}
+                className={`w-full h-14 pl-14 pr-6 rounded-2xl bg-[#f6f8f8] border-2 transition-all outline-none font-bold text-[#0d1b18] placeholder:text-gray-400 ${errors.age ? 'border-red-400' : 'border-transparent focus:border-[#11d4a4] focus:bg-white'}`}
+              />
+            </div>
+            {errors.age && <p className="text-xs text-red-500 font-bold ml-1">{errors.age.message}</p>}
           </div>
 
-          {!selectedPurposes?.length && (
-            <p className="mt-2 text-sm text-deep-crimson-600">
-              Please select at least one purpose
-            </p>
-          )}
+          {/* Education Level Select */}
+          <div className="space-y-2">
+            <label className="text-xs font-[900] text-[#0d1b18] uppercase tracking-[0.1em] ml-1">
+              Education Level
+            </label>
+            <div className="relative group">
+              <School className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-[#11d4a4] transition-colors" size={20} />
+              <select
+                {...register("education", { required: "Education level is required" })}
+                onChange={(e) => {
+                  register("education").onChange(e); // inform react-hook-form
+                  handleEducationChange(e.target.value);
+                }}
+                className={`w-full h-14 pl-14 pr-6 rounded-2xl bg-[#f6f8f8] border-2 transition-all outline-none font-bold text-[#0d1b18] appearance-none ${errors.education ? 'border-red-400' : 'border-transparent focus:border-[#11d4a4] focus:bg-white'}`}
+              >
+                <option value="">Select level</option>
+                {educationOptions.map((option) => (
+                  <option key={option} value={option}>{option}</option>
+                ))}
+                <option value="other">Other</option>
+              </select>
+            </div>
+            {errors.education && <p className="text-xs text-red-500 font-bold ml-1">{errors.education.message}</p>}
+          </div>
         </div>
 
-        {/* Age */}
-        <div>
-          <label
-            htmlFor="age"
-            className="mb-2 block text-base font-semibold text-dark-emerald-900"
-          >
-            Age
-          </label>
-          <input
-            id="age"
-            type="number"
-            min="5"
-            max="100"
-            placeholder="Enter your age"
-            {...register("age", {
-              required: "Age is required",
-              min: { value: 5, message: "Age must be at least 5" },
-              max: { value: 100, message: "Age must be 100 or less" },
-            })}
-            className="block w-full rounded-2xl border border-ash-grey-300 bg-white p-4 text-dark-emerald-900 shadow-sm outline-none focus:border-pine-teal-400 focus:ring-2 focus:ring-pine-teal-300/70"
-          />
-          {errors.age && (
-            <p className="mt-1 text-sm text-deep-crimson-600">
-              {errors.age.message}
-            </p>
-          )}
-        </div>
-
-        {/* Education Level */}
-        <div>
-          <label
-            htmlFor="education"
-            className="mb-2 block text-base font-semibold text-dark-emerald-900"
-          >
-            Education Level
-          </label>
-          <select
-            id="education"
-            {...register("education", { required: "Education level is required" })}
-            onChange={(e) => handleEducationChange(e.target.value)}
-            className="block w-full rounded-2xl border border-ash-grey-300 bg-white p-4 text-dark-emerald-900 shadow-sm outline-none focus:border-pine-teal-400 focus:ring-2 focus:ring-pine-teal-300/70"
-          >
-            <option value="">-- Select Education Level --</option>
-            {educationOptions.map((option) => (
-              <option key={option} value={option}>
-                {option}
-              </option>
-            ))}
-            <option value="other">Other</option>
-          </select>
-          {errors.education && (
-            <p className="mt-1 text-sm text-deep-crimson-600">
-              {errors.education.message}
-            </p>
-          )}
-        </div>
-
-        {/* Other Education (Conditional) */}
+        {/* Other Education Input */}
         {showOtherEducation && (
-          <div className="rounded-2xl border border-ash-grey-200 bg-ash-grey-50 p-5">
-            <label
-              htmlFor="otherEducation"
-              className="mb-2 block text-base font-semibold text-dark-emerald-900"
-            >
-              Please specify your education level
+          <div className="space-y-2 animate-in fade-in slide-in-from-top-2 duration-300">
+            <label className="text-xs font-[900] text-[#0d1b18] uppercase tracking-[0.1em] ml-1">
+              Specify Education
             </label>
             <input
-              id="otherEducation"
               type="text"
-              placeholder="e.g., Diploma, Master's, PhD, etc."
+              placeholder="e.g. Master's Degree"
               {...register("otherEducation", {
-                validate: (value) => {
-                  if (showOtherEducation && !value?.trim()) {
-                    return "Please specify your education level";
-                  }
-                  return true;
-                },
+                validate: (val) => !showOtherEducation || !!val?.trim() || "Required when 'Other' is selected"
               })}
-              className="block w-full rounded-2xl border border-ash-grey-300 bg-white p-4 text-dark-emerald-900 shadow-sm outline-none focus:border-pine-teal-400 focus:ring-2 focus:ring-pine-teal-300/70"
+              className="w-full h-14 px-6 rounded-2xl bg-[#f6f8f8] border-2 border-transparent focus:border-[#11d4a4] focus:bg-white transition-all outline-none font-bold text-[#0d1b18]"
             />
-            {errors.otherEducation && (
-              <p className="mt-1 text-sm text-deep-crimson-600">
-                {errors.otherEducation.message}
-              </p>
-            )}
           </div>
         )}
 
         {/* Submit Button */}
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          className={`w-full rounded-2xl px-5 py-4 text-base font-semibold shadow-lg transition ${
-            isSubmitting
-              ? "cursor-not-allowed bg-ash-grey-300 text-ash-grey-700"
-              : "bg-pine-teal-600 text-dark-emerald-950 hover:bg-pine-teal-500 focus:outline-none focus:ring-2 focus:ring-pine-teal-300/70"
-          }`}
-        >
-          {isSubmitting ? "Submitting..." : "Next Step"}
-        </button>
+        <div className="pt-6 flex justify-end">
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="w-full md:w-auto h-14 px-10 rounded-2xl bg-[#11d4a4] text-[#0d1b18] font-[900] text-lg shadow-xl shadow-[#11d4a4]/20 hover:opacity-90 transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2"
+          >
+            {isSubmitting ? "Saving..." : "Continue"}
+            <ArrowRight size={20} strokeWidth={3} />
+          </button>
+        </div>
       </form>
     </OnboardLayout>
   );

@@ -2,11 +2,13 @@ import React, { useEffect, useState } from "react";
 import OnboardLayout from "../../layouts/OnboardLayout.jsx";
 import { createOrder, verifyPayment } from "../../features/auth/authApi.js";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../features/auth/AuthContext.jsx";
 import {
   sendOtpForVerification,
   verifyOtp as verifyOtpApi,
 } from "../../features/auth/authApi.js";
 import CashPaymentOtp from "../../components/onboarding/CashPaymentOtp.jsx";
+import { Loader2, CreditCard, Banknote, ShieldCheck, Info, ArrowRight } from "lucide-react";
 
 const loadRazorpayScript = (src) =>
   new Promise((resolve) => {
@@ -22,8 +24,10 @@ const loadRazorpayScript = (src) =>
 
 const PaymentStep = () => {
   const navigate = useNavigate();
+  const { login } = useAuth();
   const [method, setMethod] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     loadRazorpayScript("https://checkout.razorpay.com/v1/checkout.js");
@@ -32,16 +36,30 @@ const PaymentStep = () => {
   const handleVerifyOtp = async (otp) => {
     try {
       setLoading(true);
+      setError(null);
+      
+      console.log("🔐 Submitting OTP:", otp);
+      
       const result = await verifyOtpApi({ OTP: otp });
-      console.log("verify otp result:", result);
-
+      
+      console.log("✅ OTP Verification Response:", result);
+      
       if (result.ok) {
-        navigate(`/student/${result.data.studentId}`);
+        // ✅ Pass full result object - AuthContext will extract result.data.token and result.data.user
+        login(result.data);
+        
+        console.log("✅ User logged in successfully");
+        console.log("📦 localStorage.token:", localStorage.getItem("token")?.substring(0, 30) + "...");
+        console.log("📦 localStorage.user:", localStorage.getItem("user"));
+        
+        // Navigate to profile
+        navigate("/student/profile", { replace: true });
       } else {
-        alert(result.msg || "OTP verification failed");
+        setError(result.msg || "OTP verification failed");
       }
     } catch (error) {
-      console.error("verifyOtp failed:", error?.response?.data || error.message);
+      console.error("❌ OTP verification failed:", error);
+      setError(error?.response?.data?.msg || error?.message || "OTP verification failed. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -49,61 +67,101 @@ const PaymentStep = () => {
 
   const handleMethod = async (selected) => {
     setMethod(selected);
+    setError(null);
 
-    // Cash flow: only send OTP + show input
     if (selected === "cash") {
       try {
         setLoading(true);
-        const result = await sendOtpForVerification();
-        console.log("OTP send result:", result);
+        const response = await sendOtpForVerification();
+        
+        console.log("📧 OTP sent successfully:", response);
+        
+        if (!response.ok) {
+          setError("Failed to send OTP. Please try again.");
+        }
       } catch (err) {
-        console.error(
-          "sendOtpForVerification failed:",
-          err?.response?.data || err.message
-        );
+        console.error("❌ Failed to send OTP:", err);
+        setError(err?.response?.data?.msg || err?.message || "Failed to send OTP");
       } finally {
         setLoading(false);
       }
       return;
     }
 
-    // Online flow: open Razorpay
+    // Online payment flow
     try {
       setLoading(true);
-
-      const ok = await loadRazorpayScript(
-        "https://checkout.razorpay.com/v1/checkout.js"
-      );
+      const ok = await loadRazorpayScript("https://checkout.razorpay.com/v1/checkout.js");
       if (!ok) throw new Error("Razorpay script failed to load");
 
       const orderRes = await createOrder();
       const payload = orderRes.data;
+
+      console.log("💳 Order created:", payload);
 
       const options = {
         key: "rzp_test_RvOU1OoGPgDQEO",
         amount: payload.amount,
         currency: payload.currency,
         order_id: payload.orderId,
-        name: "Admission",
-        description: `Plan ${payload.planCode}`,
+        name: "StudySpace Admission",
+        description: `Plan: ${payload.planCode}`,
         handler: async (rpRes) => {
-          const result = await verifyPayment({
-            orderId: rpRes.razorpay_order_id,
-            paymentId: rpRes.razorpay_payment_id,
-            signature: rpRes.razorpay_signature,
-          });
+          try {
+            setLoading(true);
+            
+            console.log("🔐 Verifying payment:", rpRes.razorpay_order_id);
+            
+            const result = await verifyPayment({
+              orderId: rpRes.razorpay_order_id,
+              paymentId: rpRes.razorpay_payment_id,
+              signature: rpRes.razorpay_signature,
+            });
 
-          if (result.ok) {
-            navigate(`/student/${result.data.studentId}`);
+            console.log("✅ Payment Verification Response:", result);
+
+            if (result.ok) {
+              // ✅ Pass full result object - AuthContext will extract result.data.token and result.data.user
+              login(result.data);
+              
+              console.log("✅ User logged in successfully");
+              console.log("📦 After login() called:");
+              console.log("   localStorage.token:", localStorage.getItem("token")?.substring(0, 30) + "...");
+              console.log("   localStorage.user:", localStorage.getItem("user"));
+
+              const storedUser = JSON.parse(localStorage.getItem("user"));
+              console.log("   Parsed user:", storedUser);
+              console.log("   User name:", storedUser?.name);
+              
+              // Navigate to profile
+              navigate("/student/profile", { replace: true });
+            } else {
+              setError(result.msg || "Payment verification failed");
+              setLoading(false);
+            }
+          } catch (err) {
+            console.error("❌ Payment verification error:", err);
+            setError(err?.response?.data?.msg || err?.message || "Payment verification failed");
+            setLoading(false);
           }
         },
+        modal: {
+          ondismiss: () => {
+            setLoading(false);
+            setError("Payment cancelled. Please try again.");
+          }
+        },
+        theme: {
+          color: "#11d4a4"
+        }
       };
 
       const rzp = new window.Razorpay(options);
       rzp.open();
+      setLoading(false); // Reset loading after modal opens
     } catch (err) {
-      console.log("Create order / pay failed:", err?.response?.data || err.message);
-    } finally {
+      console.error("❌ Payment order creation failed:", err);
+      setError(err?.response?.data?.msg || err?.message || "Failed to create payment order");
       setLoading(false);
     }
   };
@@ -114,98 +172,116 @@ const PaymentStep = () => {
       totalSteps={4}
       stepLabels={["Admission", "Plan", "Seat", "Payment"]}
     >
-      <div className="mx-auto w-full max-w-xl">
-        <div className="mb-8">
-          <h2 className="text-3xl font-bold text-dark-emerald-900">
-            Choose Payment Method
-          </h2>
-          <p className="mt-2 text-base text-dark-emerald-700">
-            Select how you'd like to proceed with your admission payment.
+      <div className="max-w-2xl mx-auto">
+        {/* Header */}
+        <div className="text-center mb-12">
+          <h1 className="text-3xl md:text-4xl font-[900] text-[#0d1b18] tracking-tight mb-4">
+            Finalize Admission
+          </h1>
+          <p className="text-lg text-gray-500 font-bold max-w-md mx-auto">
+            Choose your preferred payment method to secure your study space.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-          {/* CASH */}
-          <button
-            type="button"
-            onClick={() => handleMethod("cash")}
-            disabled={loading}
-            className="
-              group relative rounded-2xl border-2 border-ash-grey-200 bg-white p-6 text-left
-              transition-all duration-200
-              hover:border-pine-teal-300 hover:shadow-md
-              focus:outline-none focus:ring-2 focus:ring-pine-teal-300/60
-              disabled:cursor-not-allowed disabled:opacity-50
-            "
-          >
-            <div className="flex items-center justify-between">
-              <div className="flex-1">
-                <div className="text-lg font-semibold text-dark-emerald-900">
-                  Cash Payment
-                </div>
-                <div className="mt-1 text-base text-dark-emerald-700">
-                  Verify with admin OTP
-                </div>
-              </div>
-              <div className="ml-3 text-3xl">💵</div>
-            </div>
-          </button>
+        {/* Error Display */}
+        {error && (
+          <div className="mb-6 p-4 bg-red-50 border-2 border-red-200 rounded-2xl flex items-start gap-3 animate-in fade-in slide-in-from-top-2 duration-300">
+            <Info size={20} className="text-red-500 flex-shrink-0 mt-0.5" />
+            <p className="text-red-600 font-bold text-sm">{error}</p>
+          </div>
+        )}
 
-          {/* ONLINE */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* ONLINE OPTION */}
           <button
             type="button"
             onClick={() => handleMethod("online")}
             disabled={loading}
-            className="
-              group relative rounded-2xl border-2 border-pine-teal-200
-              bg-gradient-to-br from-pine-teal-50 to-ash-grey-50
-              p-6 text-left
-              transition-all duration-200
-              hover:border-pine-teal-300 hover:shadow-md
-              focus:outline-none focus:ring-2 focus:ring-pine-teal-300/60
-              disabled:cursor-not-allowed disabled:opacity-50
-            "
+            className={`group relative flex flex-col p-8 rounded-[32px] border-2 transition-all text-left ${
+              method === "online"
+                ? "border-[#11d4a4] bg-[#f6f8f8] shadow-lg shadow-[#11d4a4]/10"
+                : "border-[#e7f3f0] bg-white hover:border-[#11d4a4]/50"
+            } ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
           >
-            <div className="flex items-center justify-between">
-              <div className="flex-1">
-                <div className="text-lg font-semibold text-dark-emerald-900">
-                  Online Payment
-                </div>
-                <div className="mt-1 text-base text-dark-emerald-700">
-                  UPI, Card, Netbanking
-                </div>
-              </div>
-              <div className="ml-3 text-3xl">💳</div>
+            <div className={`mb-6 flex h-14 w-14 items-center justify-center rounded-2xl transition-colors ${
+              method === "online" ? "bg-[#11d4a4] text-[#0d1b18]" : "bg-[#f6f8f8] text-gray-400 group-hover:text-[#11d4a4]"
+            }`}>
+              <CreditCard size={28} strokeWidth={2.5} />
+            </div>
+            <h3 className="text-xl font-[900] text-[#0d1b18] mb-2">Online Payment</h3>
+            <p className="text-sm text-gray-500 font-bold leading-relaxed mb-6">
+              Instant activation via UPI, Cards, or Netbanking.
+            </p>
+            <div className="mt-auto flex items-center gap-2 text-[10px] font-[900] uppercase tracking-widest text-[#11d4a4]">
+              Secure Transaction <ArrowRight size={14} />
+            </div>
+          </button>
+
+          {/* CASH OPTION */}
+          <button
+            type="button"
+            onClick={() => handleMethod("cash")}
+            disabled={loading}
+            className={`group relative flex flex-col p-8 rounded-[32px] border-2 transition-all text-left ${
+              method === "cash"
+                ? "border-[#11d4a4] bg-[#f6f8f8] shadow-lg shadow-[#11d4a4]/10"
+                : "border-[#e7f3f0] bg-white hover:border-[#11d4a4]/50"
+            } ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+          >
+            <div className={`mb-6 flex h-14 w-14 items-center justify-center rounded-2xl transition-colors ${
+              method === "cash" ? "bg-[#11d4a4] text-[#0d1b18]" : "bg-[#f6f8f8] text-gray-400 group-hover:text-[#11d4a4]"
+            }`}>
+              <Banknote size={28} strokeWidth={2.5} />
+            </div>
+            <h3 className="text-xl font-[900] text-[#0d1b18] mb-2">Cash at Desk</h3>
+            <p className="text-sm text-gray-500 font-bold leading-relaxed mb-6">
+              Pay at the library reception. Requires admin OTP.
+            </p>
+            <div className="mt-auto flex items-center gap-2 text-[10px] font-[900] uppercase tracking-widest text-gray-400">
+              Manual Verification <ArrowRight size={14} />
             </div>
           </button>
         </div>
 
-        {loading && (
-          <div className="mt-6 flex items-center gap-3 rounded-2xl border border-ash-grey-200 bg-ash-grey-50 p-5">
-            <div className="h-6 w-6 animate-spin rounded-full border-2 border-ash-grey-300 border-t-pine-teal-600" />
-            <span className="text-base font-semibold text-dark-emerald-900">
-              Processing...
-            </span>
-          </div>
-        )}
-
-        {method === "cash" && !loading && (
-          <div className="mt-6 space-y-4 rounded-2xl border border-ash-grey-200 bg-ash-grey-50 p-5">
-            <div className="flex gap-3">
-              <div className="text-2xl">⏳</div>
-              <div>
-                <div className="text-lg font-semibold text-dark-emerald-900">
-                  Cash Payment Pending
+        {/* Status / OTP Area */}
+        <div className="mt-8">
+          {loading ? (
+            <div className="flex flex-col items-center justify-center py-10 text-[#11d4a4] bg-[#f6f8f8] rounded-[32px] border-2 border-[#e7f3f0]">
+              <Loader2 className="animate-spin mb-4" size={32} strokeWidth={2.5} />
+              <p className="font-[900] uppercase tracking-widest text-xs text-gray-400">
+                {method === "cash" ? "Verifying OTP..." : "Processing Payment..."}
+              </p>
+            </div>
+          ) : method === "cash" && (
+            <div className="bg-[#0d1b18] text-white p-8 rounded-[32px] shadow-xl animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <div className="flex items-start gap-4 mb-8">
+                <div className="bg-[#11d4a4]/20 p-3 rounded-2xl text-[#11d4a4]">
+                  <ShieldCheck size={24} />
                 </div>
-                <p className="mt-1 text-base text-dark-emerald-700">
-                  An OTP was sent to verify your cash payment with the admin.
-                </p>
+                <div>
+                  <h3 className="text-lg font-[900] tracking-tight">Admin Verification</h3>
+                  <p className="text-sm text-gray-400 font-bold">Please enter the 6-digit OTP provided by the library administrator.</p>
+                </div>
+              </div>
+              
+              <div className="bg-white/5 p-6 rounded-2xl border border-white/10">
+                <CashPaymentOtp length={6} onSubmit={handleVerifyOtp} />
+              </div>
+
+              <div className="mt-6 flex items-center gap-2 text-xs text-gray-500 font-bold">
+                <Info size={14} className="text-[#11d4a4]" />
+                Your seat will be confirmed once the OTP is verified.
               </div>
             </div>
+          )}
+        </div>
 
-            <CashPaymentOtp length={6} onSubmit={handleVerifyOtp} />
-          </div>
-        )}
+        {/* Security Footer */}
+        <div className="mt-12 flex items-center justify-center gap-6 opacity-40 grayscale">
+          <img src="https://upload.wikimedia.org/wikipedia/commons/8/89/Razorpay_logo.svg" alt="Razorpay" className="h-4" />
+          <div className="h-4 w-px bg-gray-300" />
+          <p className="text-[10px] font-[900] uppercase tracking-[0.2em] text-[#0d1b18]">SSL Encrypted</p>
+        </div>
       </div>
     </OnboardLayout>
   );

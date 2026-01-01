@@ -3,59 +3,132 @@ import { createContext, useEffect, useMemo, useState, useContext } from "react";
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);     // can be null in onboarding
+  const [user, setUser] = useState(null);
   const [token, setToken] = useState(null);
-  const [session, setSession] = useState(null); // onboarding session info (optional)
+  const [session, setSession] = useState(null);
 
-  // Restore from localStorage on first load
+  // ✅ Restore from localStorage on mount
   useEffect(() => {
     const storedToken = localStorage.getItem("token");
     const storedUser = localStorage.getItem("user");
-    const storedSession = localStorage.getItem("session");
 
-    if (storedToken) setToken(storedToken);
+    console.log("🔄 AuthContext: Restoring from localStorage");
+    console.log("   storedToken:", storedToken ? "EXISTS" : "MISSING");
+    console.log("   storedUser:", storedUser);
 
-    if (storedUser) {
+    if (storedToken) {
+      setToken(storedToken);
+    }
+
+    if (storedUser && storedUser !== "{}") {
       try {
-        setUser(JSON.parse(storedUser));
-      } catch {
+        const parsedUser = JSON.parse(storedUser);
+        if (parsedUser && Object.keys(parsedUser).length > 0) {
+          setUser(parsedUser);
+          console.log("✅ User restored:", parsedUser);
+        } else {
+          console.warn("⚠️ Empty user object in localStorage");
+        }
+      } catch (err) {
+        console.error("❌ Failed to parse stored user:", err);
         localStorage.removeItem("user");
         setUser(null);
       }
     }
-
-    if (storedSession) {
-      try {
-        setSession(JSON.parse(storedSession));
-      } catch {
-        localStorage.removeItem("session");
-        setSession(null);
-      }
-    }
   }, []);
 
-  // Normal app login (expects old backend shape)
+  // ✅ Updated login function
   const login = (response) => {
-    const userData = response?.data; // { id, name, email, role, token }
-    if (!userData?.token) throw new Error("login(): token missing in response.data");
+    let userData;
+    let authToken;
 
+    console.log("🔑 AuthContext.login() called");
+    console.log("   Full response:", response);
+
+    // ✅ Format 1: Direct { token, user }
+    if (response?.token && response?.user) {
+      console.log("✅ Format 1 detected: { token, user }");
+      authToken = response.token;
+      userData = response.user;
+    }
+    // ✅ Format 2: Nested { data: { token, user } }
+    else if (response?.data?.token && response?.data?.user) {
+      console.log("✅ Format 2 detected: { data: { token, user } }");
+      authToken = response.data.token;
+      userData = response.data.user;
+    }
+    // ✅ Format 3: Legacy { data: { token, id, name, email, role } }
+    else if (response?.data?.token) {
+      console.log("✅ Format 3 detected: Legacy format");
+      authToken = response.data.token;
+      userData = response.data;
+    }
+    else {
+      console.error("❌ NO VALID FORMAT DETECTED");
+      console.error("   response structure:", {
+        hasToken: !!response?.token,
+        hasUser: !!response?.user,
+        hasData: !!response?.data,
+        hasDataToken: !!response?.data?.token,
+        hasDataUser: !!response?.data?.user,
+      });
+      throw new Error("login(): Invalid response format - token or user missing");
+    }
+
+    if (!authToken) {
+      console.error("❌ authToken is undefined");
+      throw new Error("login(): token missing");
+    }
+
+    if (!userData) {
+      console.error("❌ userData is undefined");
+      throw new Error("login(): user data missing");
+    }
+
+    console.log("📦 Extracted userData:", userData);
+
+    // ✅ Normalize user object - handle both formats
     const safeUser = {
-      id: userData.id,
-      name: userData.name,
-      email: userData.email,
-      role: userData.role,
+      id: userData.id || userData._id || userData.userId,
+      name: userData.name || "",
+      email: userData.email || "",
+      role: userData.role || "student",
     };
 
+    console.log("✅ Normalized safeUser:", safeUser);
+
+    // ✅ Validate safeUser has required fields
+    if (!safeUser.id || !safeUser.email) {
+      console.error("❌ Missing required user fields:", safeUser);
+      throw new Error("login(): user missing required fields (id or email)");
+    }
+
+    console.log("✅ Setting user state:", safeUser);
+    console.log("✅ Setting token");
+
     setUser(safeUser);
-    setToken(userData.token);
+    setToken(authToken);
     setSession(null);
 
-    localStorage.setItem("token", userData.token);
-    localStorage.setItem("user", JSON.stringify(safeUser));
+    const userJson = JSON.stringify(safeUser);
+    console.log("💾 Saving to localStorage:");
+    console.log("   token:", authToken.substring(0, 30) + "...");
+    console.log("   user JSON:", userJson);
+
+    localStorage.setItem("token", authToken);
+    localStorage.setItem("user", userJson);
     localStorage.removeItem("session");
+
+    // ✅ Verify what was actually saved
+    const savedUser = localStorage.getItem("user");
+    console.log("✅ Verification - user in localStorage:", savedUser);
+    
+    if (savedUser === "{}") {
+      console.error("❌ WARNING: Empty object saved to localStorage!");
+    }
   };
 
-  // Onboarding start (expects step1 onboarding shape)
+  // Onboarding start
   const startOnboardingSession = ({ token, sessionId, currentStep, email }) => {
     if (!token) throw new Error("startOnboardingSession(): token missing");
 
@@ -84,10 +157,11 @@ export const AuthProvider = ({ children }) => {
       user,
       token,
       session,
+      onboardingSession: session,
       login,
       startOnboardingSession,
       logout,
-      isAuthenticated: !!token, // token-based auth (works for onboarding too)
+      isAuthenticated: !!token,
     }),
     [user, token, session]
   );
@@ -100,3 +174,5 @@ export const useAuth = () => {
   if (!ctx) throw new Error("useAuth must be used inside AuthProvider");
   return ctx;
 };
+
+export default AuthContext;

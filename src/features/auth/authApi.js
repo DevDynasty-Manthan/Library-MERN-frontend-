@@ -75,6 +75,7 @@ export const getSessionDetails = async ()=>{
         return response.data;
     }
     catch(error){
+        console.log(error)
         throw error;
     }
 }
@@ -115,6 +116,7 @@ export const verifyOtp = async (otpData)=>{
          return response.data;
     }
     catch(error){
+        console.log(error)
         throw error
     }
 }
