@@ -16,9 +16,13 @@ import StudentPayments from './pages/student/StudentPayments.jsx'
 import StudentLayout from './layouts/StudentLayout.jsx'
 import PublicLayout from './layouts/PublicLayout.jsx'
 import LandingPage from './pages/Landing/LandingPage.jsx'
-import './App.css'
 import AdminLayout from './layouts/AdminLayout.jsx'
+import AdminDashboard from './pages/Admin/AdminDashboard.jsx'
 import AdminStudents from './pages/Admin/AdminStudents.jsx'
+import './App.css'
+import AdminPayments from './pages/Admin/AdminPayments.jsx'
+import AdminSeatsPlans from './pages/Admin/AdminSeatsPlans.jsx'
+
 function App() {
   
 
@@ -41,10 +45,10 @@ function App() {
         <Route path='payments' element={<StudentPayments />} />
       </Route>
       <Route path='/admin' element={<AdminLayout/>}>
-        <Route path='dashboard' ></Route>
+        <Route path='dashboard' element={<AdminDashboard/>}></Route>
         <Route path='students' element={<AdminStudents/>}/ >
-        <Route path='seats' ></Route>
-        <Route path='payments' ></Route>
+        <Route path='seats' element={<AdminSeatsPlans/>} ></Route>
+        <Route path='payments' element={<AdminPayments/>} ></Route>
 
       </Route>
      </Routes>
